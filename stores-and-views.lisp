@@ -36,7 +36,9 @@
                      (make-array (max ,initial-size
                                       (length ,g!initial-contents))
                                  :adjustable t
-                                 :fill-pointer (if ,g!initial-contents t 0))))
+                                 :fill-pointer (if ,g!initial-contents
+                                                   (length ,g!initial-contents)
+                                                   0))))
            ,g!store))
        (defmethod setup-tree-view ((,g!ident (eql ',name)) ,g!view)
          ,@(iter (for x in columns)
