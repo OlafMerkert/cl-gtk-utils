@@ -26,3 +26,9 @@
 
 (defun default-destroy (window)
   (on-destroy window (leave-gtk-main)))
+
+(defun group-radio-buttons (&rest radio-buttons)
+  (mapc (lambda (first second)
+          (setf (radio-button-group first)
+                (radio-button-group second)))
+        radio-buttons (rest radio-buttons)))
