@@ -1,5 +1,7 @@
 (in-package :gtk-utils)
 
+;;; utilities to make event handling in cl-gtk more convenient
+
 (defmacro define-signals (&rest signal-names)
   `(progn
      ,@(mapcar

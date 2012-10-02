@@ -3,4 +3,5 @@
                  cl-gtk2-gtk)
     :serial t
     :components ((:file "packages")
-                 (:file "events")))
+                 (:file "events")
+                 (:file "stores-and-views")))

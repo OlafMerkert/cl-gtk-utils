@@ -1,6 +1,7 @@
 (defpackage :gtk-utils
   (:shadowing-import-from :gtk :range)
   (:use :cl :ol
+        :iterate
         :gtk :gdk :gobject)
   (:export
    :define-signals
@@ -9,4 +10,6 @@
    :on-changed
    :on-destroy
    :default-destroy
-   :event))
+   :event
+   :store-replace-all-items
+   :create-custom-store))
