@@ -12,4 +12,8 @@
    :default-destroy
    :event
    :store-replace-all-items
-   :create-custom-store))
+   :create-custom-store
+   :group-radio-buttons
+   :define-custom-store
+   :make-store
+   :setup-tree-view))
