@@ -16,4 +16,5 @@
    :group-radio-buttons
    :define-custom-store
    :make-store
-   :setup-tree-view))
+   :setup-tree-view
+   :add-tree-view-column))

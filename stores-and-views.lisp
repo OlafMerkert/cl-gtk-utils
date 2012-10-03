@@ -48,7 +48,7 @@
                    ;; TODO maybe use type information to choose
                    ;; different renderers
                    (collect
-                       `(add-tree-view-colum ,g!view ,label ,i))))))))
+                       `(add-tree-view-column ,g!view ,label ,i))))))))
 
 (defun store-replace-all-items (store new-item-array)
   "Replace the backing array of an ARRAY-LIST-STORE with
