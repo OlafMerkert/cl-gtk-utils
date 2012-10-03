@@ -17,4 +17,5 @@
    :define-custom-store
    :make-store
    :setup-tree-view
-   :add-tree-view-column))
+   :add-tree-view-column
+   :tree-view-selected-row))

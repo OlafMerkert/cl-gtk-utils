@@ -82,3 +82,10 @@ entries, and signals for the insertion of all the new entries."
     (tree-view-column-pack-start     column renderer)
     (tree-view-column-add-attribute  column renderer "text" col-index)
     (tree-view-append-column view    column)))
+
+(defun tree-view-selected-row (view)
+  "Return the selected row index from tree-view, which presents a
+list-store."
+  (let ((row-paths (tree-selection-selected-rows (tree-view-selection view))))
+    (when row-paths
+      (first (tree-path-indices (first row-paths))))))
