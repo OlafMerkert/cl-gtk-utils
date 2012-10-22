@@ -81,6 +81,9 @@
                    (collect
                        `(add-tree-view-column ,g!view ,label ,i))))))))
 
+;; TODO setup-tree-view should take care of the store too
+;; TODO analoguous stuff for combo-boxes
+
 (defun store-replace-all-items (store new-item-array)
   "Replace the backing array of an ARRAY-LIST-STORE with
 NEW-ITEM-ARRAY and send signals for the deletion of all previous
@@ -120,3 +123,10 @@ list-store."
   (let ((row-paths (tree-selection-selected-rows (tree-view-selection view))))
     (when row-paths
       (first (tree-path-indices (first row-paths))))))
+
+;;; utilities for combo boxes
+(defun add-cell-layout-column (view col-index)
+  (let ((renderer (make-instance 'cell-renderer-text)))
+    (cell-layout-pack-start view renderer)
+    ;; TODO other renderers than text??
+    (cell-layout-add-attribute view renderer "text" col-index)))
