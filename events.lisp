@@ -19,7 +19,7 @@
                   (t (values (symb 'on- signal-name) signal-string))))
             `(defmacro ,signal-symbol (object &body body)
                `(connect-signal ,object ,',(format nil "~(~A~)" signal-string)
-                                (ilambda (event) ,@body)))))
+                                (ilambda (&rest args) ,@body)))))
         signal-names)))
 
 (define-signals on-clicked on-toggled on-changed on-destroy)
