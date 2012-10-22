@@ -1,5 +1,10 @@
 (in-package :gtk-utils)
 
+
+(defun format-decimal (decimal &optional stream)
+  "format DECIMAL with two following zeroes."
+  (format stream "~,2F" decimal))
+
 (defparameter gtk-type-mapping
   '((string  . "gchararray")
     (integer . "gint")
@@ -18,27 +23,29 @@
 (defmacro! define-transform-reader (type &body transformation)
   `(defmethod transform-reader ((type (eql ',type)) ,g!reader-function)
      (lambda (,g!object)
-       (let ((value (funcall ,g!reader-function ,g!object)))
+       (let ((,type (funcall ,g!reader-function ,g!object)))
          ,@transformation))))
 
 
 ;; special formatting for number, symbol and date
 (define-transform-reader number
-  (princ-to-string value))
+  (princ-to-string number))
 
 (define-transform-reader symbol
-  (princ-to-string value))
+  (princ-to-string symbol))
 
 (define-transform-reader decimal
-  (format nil "~,2D" value))
+  (format-decimal decimal))
 
 (define-transform-reader date
-  (ol-date-utils:print-date value))
+  (ol-date-utils:print-date date))
 
 ;;; utilities for working with array list stores
 (defgeneric make-store (store-ident &optional contents))
 
 (defgeneric setup-tree-view (store-ident view))
+
+;; TODO numbers and decimals aligned to the right
 
 (defmacro! define-custom-store (name columns &key
                                      (initial-contents nil)
