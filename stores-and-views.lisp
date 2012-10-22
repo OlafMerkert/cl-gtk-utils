@@ -84,6 +84,18 @@
 ;; TODO setup-tree-view should take care of the store too
 ;; TODO analoguous stuff for combo-boxes
 
+(defun emit-list-store-signal (store signal row)
+  "Emit the given SIGNAL (as string) on the given ROW of the
+`tree-model' STORE."
+  (let ((path (make-instance 'tree-path))
+        (iter (make-instance 'tree-iter)))
+    (setf (tree-path-indices path) (list row)
+          (tree-iter-stamp iter) 0
+          (tree-iter-user-data iter) row)
+    (if (equal signal "row-deleted")
+        (emit-signal store signal path)
+        (emit-signal store signal path iter))))
+
 (defun store-replace-all-items (store new-item-array)
   "Replace the backing array of an ARRAY-LIST-STORE with
 NEW-ITEM-ARRAY and send signals for the deletion of all previous
@@ -92,20 +104,12 @@ entries, and signals for the insertion of all the new entries."
         (l-new (length new-item-array)))
     ;; signal deletion of all the rows
     (iter (for i from (- l-old 1) downto 0)
-          (for path = (make-instance 'tree-path))
-          (setf (tree-path-indices path) (list i))
-          (emit-signal store "row-deleted" path))
+          (emit-list-store-signal store "row-deleted" i))
     ;; replace the array
     (setf (slot-value store 'gtk::items) new-item-array)
     ;; signal creation of all the new rows
     (iter (for i from 0 below l-new)
-          (for path = (make-instance 'tree-path))
-          (for iter = (make-instance 'tree-iter))
-          (setf (tree-path-indices path) (list i))
-          (setf (tree-iter-stamp iter) 0
-                (tree-iter-user-data iter) i)
-          (emit-signal store "row-inserted"
-                       path iter))
+          (emit-list-store-signal store "row-inserted" i))
     l-new))
 
 ;;; utilities for working with tree-views on top of these stores

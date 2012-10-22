@@ -24,4 +24,5 @@
    :number
    :decimal
    :symbol
-   :date))
+   :date
+   :emit-list-store-signal))
