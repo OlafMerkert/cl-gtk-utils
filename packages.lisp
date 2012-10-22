@@ -18,4 +18,10 @@
    :make-store
    :setup-tree-view
    :add-tree-view-column
-   :tree-view-selected-row))
+   :tree-view-selected-row
+   :args
+   :add-cell-layout-column
+   :number
+   :decimal
+   :symbol
+   :date))

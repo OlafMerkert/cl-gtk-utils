@@ -2,8 +2,38 @@
 
 (defparameter gtk-type-mapping
   '((string  . "gchararray")
-    (integer . "gint"))
+    (integer . "gint")
+    (number  . "gchararray")
+    (decimal . "gchararray")
+    (symbol  . "gchararray")
+    (date    . "gchararray"))
   "the gtk type string to use for frequent lisp types.")
+
+(defgeneric transform-reader (type reader-function))
+
+;; by default just do nothing
+(defmethod transform-reader (type  reader-function)
+  reader-function)
+
+(defmacro! define-transform-reader (type &body transformation)
+  `(defmethod transform-reader ((type (eql ',type)) ,g!reader-function)
+     (lambda (,g!object)
+       (let ((value (funcall ,g!reader-function ,g!object)))
+         ,@transformation))))
+
+
+;; special formatting for number, symbol and date
+(define-transform-reader number
+  (princ-to-string value))
+
+(define-transform-reader symbol
+  (princ-to-string value))
+
+(define-transform-reader decimal
+  (format nil "~,2D" value))
+
+(define-transform-reader date
+  (ol-date-utils:print-date value))
 
 ;;; utilities for working with array list stores
 (defgeneric make-store (store-ident &optional contents))
@@ -13,6 +43,7 @@
 (defmacro! define-custom-store (name columns &key
                                      (initial-contents nil)
                                      (initial-size 20))
+  ;; FIXME initial-contents works only as vector atm
   (let ((columns (mapcar #'mklist columns)))
     `(progn
        (defmethod make-store ((,g!ident (eql ',name)) &optional ,g!contents)
@@ -27,7 +58,7 @@
                     ,(cond ((stringp type) type)
                            ((assoc1 type gtk-type-mapping))
                            (t (error "Uncompatible lisp type ~A for GTK store." type)))
-                    (function ,accessor))))
+                    (transform-reader ',type (function ,accessor)))))
               columns)
            ;; setup the contents of the array-list store
            (setf (slot-value ,g!store 'gtk::items)
