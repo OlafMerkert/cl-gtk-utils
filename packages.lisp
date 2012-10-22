@@ -26,4 +26,5 @@
    :symbol
    :date
    :emit-list-store-signal
-   :format-decimal))
+   :format-decimal
+   :read-decimal))

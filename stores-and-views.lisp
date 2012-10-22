@@ -5,6 +5,14 @@
   "format DECIMAL with two following zeroes."
   (format stream "~,2F" decimal))
 
+(defun read-decimal (string)
+  "Read a decimal from a string where #\, is equivalent with #\."
+  (aprog1
+      (read-from-string (substitute #\. #\, string :test #'char=))
+    ;; TODO check that we got a number
+    (unless (numberp it)
+      (error "Input not a number: ~A" it))))
+
 (defparameter gtk-type-mapping
   '((string  . "gchararray")
     (integer . "gint")
