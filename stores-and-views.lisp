@@ -56,14 +56,11 @@
 ;; TODO numbers and decimals aligned to the right
 
 (defmacro! define-custom-store (name columns &key
-                                     (initial-contents nil)
-                                     (initial-size 20))
-  ;; FIXME initial-contents works only as vector atm
+                                     (initial-contents nil))
   (let ((columns (mapcar #'mklist columns)))
     `(progn
        (defmethod make-store ((,g!ident (eql ',name)) &optional ,g!contents)
-         (let ((,g!store (make-instance 'array-list-store))
-               (,g!initial-contents (or ,g!contents ,initial-contents)))
+         (let ((,g!store (make-instance 'array-list-store)))
            ;; create definitions of the columns
            ,@(mapcar
               (lambda (x)
@@ -76,15 +73,7 @@
                     (transform-reader ',type (function ,accessor)))))
               columns)
            ;; setup the contents of the array-list store
-           (setf (slot-value ,g!store 'gtk::items)
-                 (if (arrayp ,g!initial-contents)
-                     ,g!initial-contents
-                     (make-array (max ,initial-size
-                                      (length ,g!initial-contents))
-                                 :adjustable t
-                                 :fill-pointer (if ,g!initial-contents
-                                                   (length ,g!initial-contents)
-                                                   0))))
+           (store-load-items ,g!store (or ,g!contents ,initial-contents))
            ,g!store))
        (defmethod setup-tree-view ((,g!ident (eql ',name)) ,g!view)
          ,@(iter (for x in columns)
@@ -110,6 +99,19 @@
     (if (equal signal "row-deleted")
         (emit-signal store signal path)
         (emit-signal store signal path iter))))
+
+(defun store-load-items (store initial-contents &optional (initial-size 20))
+  (setf (slot-value store 'gtk::items)
+        (if (arrayp initial-contents)
+            initial-contents
+            (make-array (max initial-size
+                             (length initial-contents))
+                        :adjustable t
+                        :initial-contents initial-contents
+                        :fill-pointer (if initial-contents
+                                          (length initial-contents)
+                                          0)))))
+
 
 (defun store-replace-all-items (store new-item-array)
   "Replace the backing array of an ARRAY-LIST-STORE with
