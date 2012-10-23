@@ -49,6 +49,15 @@
   (ol-date-utils:print-date date))
 
 ;;; utilities for working with array list stores
+
+;; helper macro for working with the column specs
+(defmacro with-column ((column) &body body)
+  `(destructuring-bind
+         (accessor &key (type 'string) (label "???"))
+       (mklist ,column)
+     (declare (ignorable accessor type label))
+     ,@body))
+
 (defgeneric make-store (store-ident &optional contents))
 
 (defgeneric setup-tree-view (store-ident store view))
@@ -56,38 +65,38 @@
 ;; TODO numbers and decimals aligned to the right
 
 (defmacro! define-custom-store (name columns &key
-                                     (initial-contents nil))
-  (let ((columns (mapcar #'mklist columns)))
-    `(progn
-       (defmethod make-store ((,g!ident (eql ',name)) &optional ,g!contents)
-         (let ((,g!store (make-instance 'array-list-store)))
-           ;; create definitions of the columns
-           ,@(mapcar
-              (lambda (x)
-                (destructuring-bind (accessor &key (type 'string) &allow-other-keys) x
-                  `(store-add-column
-                    ,g!store
-                    ,(cond ((stringp type) type)
-                           ((assoc1 type gtk-type-mapping))
-                           (t (error "Uncompatible lisp type ~A for GTK store." type)))
-                    (transform-reader ',type (function ,accessor)))))
-              columns)
-           ;; setup the contents of the array-list store
-           (store-load-items ,g!store (or ,g!contents ,initial-contents))
-           ,g!store))
-       (defmethod setup-tree-view ((,g!ident (eql ',name)) ,g!store ,g!view)
-         (setf (tree-view-model ,g!view) ,g!store)
-         ,@(iter (for x in columns)
-                 (for i from 0)
-                 (destructuring-bind (accessor &key (label "??") &allow-other-keys) x
-                   (declare (ignore accessor))
-                   ;; TODO maybe use type information to choose
-                   ;; different renderers
-                   (collect
-                       `(add-tree-view-column ,g!view ,label ,i))))))))
+                                     (initial-contents nil)
+                                     (tree-view t))
+  `(progn
+     (defmethod make-store ((,g!ident (eql ',name)) &optional ,g!contents)
+       (let ((,g!store (make-instance 'array-list-store)))
+         ;; create definitions of the columns
+         ,@(mapcar
+            (lambda (col)
+              (with-column (col)
+                `(store-add-column
+                  ,g!store
+                  ,(cond ((stringp type) type)
+                         ((assoc1 type gtk-type-mapping))
+                         (t (error "Uncompatible lisp type ~A for GTK store." type)))
+                  (transform-reader ',type (function ,accessor)))))
+            columns)
+         ;; setup the contents of the array-list store
+         (store-load-items ,g!store (or ,g!contents ,initial-contents))
+         ,g!store))
+     ,(when tree-view
+            `(define-custom-tree-view ,name ,columns))))
 
-;; TODO setup-tree-view should take care of the store too
-;; TODO analoguous stuff for combo-boxes
+(defmacro! define-custom-tree-view (name columns &key)
+  `(defmethod setup-tree-view ((,g!ident (eql ',name)) ,g!store ,g!view)
+     (setf (tree-view-model ,g!view) ,g!store)
+     ,@(iter (for col in columns)
+             (for i from 0)
+             (with-column (col)
+               ;; TODO maybe use type information to choose
+               ;; different renderers
+               (collect
+                   `(add-tree-view-column ,g!view ,label ,i))))))
 
 (defun emit-list-store-signal (store signal row)
   "Emit the given SIGNAL (as string) on the given ROW of the
