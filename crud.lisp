@@ -51,3 +51,24 @@ thorough clearing."
       #1#)
     box))
 
+;;; TODO the ultimate macro to build a crud ui automatically from an
+;;; enhanced defclass
+(defun unbox (x)
+  (if (atom x) x (car x)))
+
+(defmacro defclass/crud (name direct-superclasses direct-slots &rest options)
+  `(progn
+     (defclass/f ,name ,direct-superclasses
+      ,(mapcar #'unbox direct-slots)
+      ,@options)
+
+     (defmethod copy-contents (from to)
+       (dolist (slot ',(mapcar #'unbox direct-slots))
+         (setf (slot-value to slot) (slot-value from slot))))
+
+     (define-custom-store ',(symb name '-tabelle)
+         ,direct-slots
+       :tree-view nil)
+
+     (define-custom-tree-view ',(symb name '-tabelle)
+         ,direct-slots)))

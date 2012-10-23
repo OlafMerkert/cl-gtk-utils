@@ -30,4 +30,5 @@
    :read-decimal
    :setup-combo-box
    :crud-buttons
-   :copy-contents))
+   :copy-contents
+   :defclass/crud))
