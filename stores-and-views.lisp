@@ -152,3 +152,26 @@ list-store."
     (cell-layout-pack-start view renderer)
     ;; TODO other renderers than text??
     (cell-layout-add-attribute view renderer "text" col-index)))
+
+(define-custom-store standard-combo-box-model
+    ((mkstr)))
+
+(defgeneric setup-combo-box (store combo-box &optional column)
+  (:documentation "Hook the COMBO-BOX to a STORE, given either by a
+  `sequence', a `symbol' identifying a store or an actual
+  `list-store', where the data is take from COLUMN."))
+
+(defmethod setup-combo-box (store combo-box &optional (column 0))
+  (setf (combo-box-model combo-box) store
+        (combo-box-active combo-box) 0)
+  (add-cell-layout-column combo-box column))
+
+(defmethod setup-combo-box ((store symbol) combo-box &optional (column 0))
+  (setup-combo-box (make-store 'symbol) combo-box column))
+
+(defmethod setup-combo-box ((store-contents sequence) combo-box &optional column)
+  (declare (ignore column))
+  (setup-combo-box
+   (make-store 'standard-combo-box-model
+               store-contents)
+   combo-box))

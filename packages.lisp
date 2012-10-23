@@ -27,4 +27,5 @@
    :date
    :emit-list-store-signal
    :format-decimal
-   :read-decimal))
+   :read-decimal
+   :setup-combo-box))
