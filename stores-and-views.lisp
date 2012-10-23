@@ -13,6 +13,7 @@
     (unless (numberp it)
       (error "Input not a number: ~A" it))))
 
+(ew
 (defparameter gtk-type-mapping
   '((string  . "gchararray")
     (integer . "gint")
@@ -20,7 +21,7 @@
     (decimal . "gchararray")
     (symbol  . "gchararray")
     (date    . "gchararray"))
-  "the gtk type string to use for frequent lisp types.")
+  "the gtk type string to use for frequent lisp types."))
 
 (defgeneric transform-reader (type reader-function))
 
@@ -110,17 +111,15 @@
         (emit-signal store signal path)
         (emit-signal store signal path iter))))
 
-(defun store-load-items (store initial-contents &optional (initial-size 20))
+(defun store-load-items (store initial-contents)
   (setf (slot-value store 'gtk::items)
-        (if (arrayp initial-contents)
+        (if (and (arrayp initial-contents)
+                 (adjustable-array-p initial-contents))
             initial-contents
-            (make-array (max initial-size
-                             (length initial-contents))
+            (make-array (length initial-contents)
                         :adjustable t
                         :initial-contents initial-contents
-                        :fill-pointer (if initial-contents
-                                          (length initial-contents)
-                                          0)))))
+                        :fill-pointer t))))
 
 
 (defun store-replace-all-items (store new-item-array)
