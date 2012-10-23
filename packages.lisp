@@ -28,4 +28,6 @@
    :emit-list-store-signal
    :format-decimal
    :read-decimal
-   :setup-combo-box))
+   :setup-combo-box
+   :crud-buttons
+   :copy-contents))

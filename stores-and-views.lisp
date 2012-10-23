@@ -6,10 +6,10 @@
   (format stream "~,2F" decimal))
 
 (defun read-decimal (string)
-  "Read a decimal from a string where #\, is equivalent with #\."
+  "Read a decimal from a STRING where #\, is equivalent with #\."
   (aprog1
       (read-from-string (substitute #\. #\, string :test #'char=))
-    ;; TODO check that we got a number
+    ;; TODO check that we got a number (use a condition)
     (unless (numberp it)
       (error "Input not a number: ~A" it))))
 
@@ -124,7 +124,7 @@
 
 
 (defun store-replace-all-items (store new-item-array)
-  "Replace the backing array of an ARRAY-LIST-STORE with
+  "Replace the backing array of an `array-list-store' with
 NEW-ITEM-ARRAY and send signals for the deletion of all previous
 entries, and signals for the insertion of all the new entries."
   (let ((l-old (store-items-count store))

@@ -5,4 +5,5 @@
     :serial t
     :components ((:file "packages")
                  (:file "events")
-                 (:file "stores-and-views")))
+                 (:file "stores-and-views")
+                 (:file "crud")))
