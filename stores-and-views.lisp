@@ -51,7 +51,7 @@
 ;;; utilities for working with array list stores
 (defgeneric make-store (store-ident &optional contents))
 
-(defgeneric setup-tree-view (store-ident view))
+(defgeneric setup-tree-view (store-ident store view))
 
 ;; TODO numbers and decimals aligned to the right
 
@@ -75,7 +75,8 @@
            ;; setup the contents of the array-list store
            (store-load-items ,g!store (or ,g!contents ,initial-contents))
            ,g!store))
-       (defmethod setup-tree-view ((,g!ident (eql ',name)) ,g!view)
+       (defmethod setup-tree-view ((,g!ident (eql ',name)) ,g!store ,g!view)
+         (setf (tree-view-model ,g!view) ,g!store)
          ,@(iter (for x in columns)
                  (for i from 0)
                  (destructuring-bind (accessor &key (label "??") &allow-other-keys) x
