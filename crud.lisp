@@ -102,10 +102,11 @@ generate instances of class NAME."
 (defgeneric write-ui-input (type data &rest vars))
 (defgeneric clear-ui-input (type &rest vars))
 
+(ew
 (defun numbered-symbols (prefix list)
   (iter (for i from 1)
         (for l in list)
-        (collect (symb prefix i))))
+        (collect (symb prefix i)))))
 
 (defmacro! define-ui-input (type &body components)
   "Define an UI input element to be used by CRUD-INPUTS for the given
