@@ -87,7 +87,7 @@ thorough clearing."
                          (if clear
                              cmd
                              `(when ,g!thorough
-                                ,clear))))
+                                ,cmd))))
                      columns input-vars)))
            (list ,g!box
                  :read-ui  ,g!read-ui
@@ -104,7 +104,6 @@ thorough clearing."
   (iter (for i from 1)
         (for l in list)
         (collect (symb prefix i))))
-
 
 (defmacro! define-ui-input (type &body components)
   (let ((comp-specs (remove-if-not #'listp components :key #'first))
@@ -159,6 +158,20 @@ thorough clearing."
            (parse-integer (entry-text c-1))
            (parse-integer (entry-text c-2))
            (parse-integer (entry-text c-3)))))
+
+(define-ui-input decimal
+  ((entry :width-chars 8)
+   :accessor (format-decimal decimal)
+   :default-value "")
+  (:write (setf (entry-text c-1) v-1))
+  (:read (read-decimal (entry-text c-1))))
+
+(define-ui-input symbol
+  ((entry)
+   :accessor (symbol-name symbol)
+   :default-value "")
+  (:write (setf (entry-text c-1) v-1))
+  (:read (intern (string-upcase (entry-text c-1)))))
 
 ;;; TODO the ultimate macro to build a crud ui automatically from an
 ;;; enhanced defclass
