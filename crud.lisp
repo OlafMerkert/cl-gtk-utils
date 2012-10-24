@@ -53,11 +53,11 @@ thorough clearing."
 
 
 (ew
-(defun crud-inputs (name columns)
+(defun crud-inputs (name columns box-var body)
   (let (input-vars)
     (with-gensyms!
       `(let-ui (h-box
-                :var ,g!box
+                :var ,box-var
                 ,@(mapcan
                    (with-column+ ()
                      (multiple-value-bind (entries vars)
@@ -67,7 +67,7 @@ thorough clearing."
                          ,@(mapcan (lambda (x) `(,x :expand ,expand)) entries))))
                    columns))
          ;; read/write/clear
-         (flet ((,g!read-ui ()
+         (flet ((read-ui ()
                   (make-instance
                    ',name
                    ,@(mapcan
@@ -75,12 +75,12 @@ thorough clearing."
                         `(,(keyw accessor)
                            (read-ui-input ',type ,@vars)))
                       columns (setf input-vars (reverse input-vars)))))
-                (,g!write-ui (,g!object)
+                (write-ui (,g!object)
                   ,@(mapcar
                      (with-column+ (vars)
                        `(write-ui-input ',type (,accessor ,g!object) ,@vars))
                      columns input-vars))
-                (,g!clear-ui (&optional ,g!thorough)
+                (clear-ui (&optional ,g!thorough)
                   ,@(mapcar
                      (with-column+ (vars)
                        (let ((cmd `(clear-ui-input ',type ,@vars)))
@@ -89,10 +89,7 @@ thorough clearing."
                              `(when ,g!thorough
                                 ,cmd))))
                      columns input-vars)))
-           (list ,g!box
-                 :read-ui  ,g!read-ui
-                 :write-ui ,g!write-ui
-                 :clear-ui ,g!clear-ui)))))))
+           ,@body))))))
 
 (defgeneric generate-ui-input-fields (type))
 
@@ -173,6 +170,45 @@ thorough clearing."
   (:write (setf (entry-text c-1) v-1))
   (:read (intern (string-upcase (entry-text c-1)))))
 
+(defgeneric make-crud (crud-ident contents))
+
+(defstruct (crud
+             (:constructor make-crud%)
+             (:conc-name crud%-))
+  store
+  view
+  inputs
+  buttons)
+
+(defmacro! define-custom-crud (name columns)
+  ;; a crud consists of a backing store, a box containing the input
+  ;; ui, a box containing the actions ui and a tree-view linked to the store
+  `(defmethod make-crud ((crud-ident (eql ',name)) ,g!contents)
+     (let ((,g!store (make-store ',(symb name '-tabelle) ,g!contents))
+           (,g!view  (make-instance 'tree-view)))
+       (setup-tree-view ',(symb name '-tabelle) ,g!store ,g!view)
+       ,(crud-inputs
+         name columns g!inputs
+         `((make-crud% :store ,g!store
+                       :view ,g!view
+                       :inputs ,g!inputs
+                       :buttons
+                       (crud-buttons ,g!store ,g!view
+                          :read-ui  #'read-ui
+                          :write-ui #'write-ui
+                          :clear-ui #'clear-ui)))))))
+
+(defun crud-default-attach (crud v-box)
+  (let ((scwin (make-instance 'scrolled-window
+                              :hscrollbar-policy nil
+                              :vscrollbar-policy :automatic)))
+    (box-pack-start v-box (crud%-inputs crud) :expand nil)
+    (box-pack-start v-box (crud%-buttons crud) :expand nil)
+    (box-pack-start scwin (crud%-view crud))
+    (box-pack-start v-box scwin))
+  (crud%-store crud))
+
+
 ;;; TODO the ultimate macro to build a crud ui automatically from an
 ;;; enhanced defclass
 (defun unbox (x)
@@ -188,9 +224,13 @@ thorough clearing."
        (dolist (slot ',(mapcar #'unbox direct-slots))
          (setf (slot-value to slot) (slot-value from slot))))
 
-     (define-custom-store ',(symb name '-tabelle)
+     (define-custom-store ,(symb name '-tabelle)
          ,direct-slots
        :tree-view nil)
 
-     (define-custom-tree-view ',(symb name '-tabelle)
-         ,direct-slots)))
+     (define-custom-tree-view ,(symb name '-tabelle)
+         ,direct-slots)
+
+     (define-custom-crud ,name ,direct-superclasses)))
+
+;; TODO support for combo-boxes in the crud

@@ -32,4 +32,7 @@
    :crud-buttons
    :copy-contents
    :defclass/crud
-   :crud-inputs))
+   :crud-inputs
+   :make-crud
+   :crud-default-attach
+   :define-custom-crud))
