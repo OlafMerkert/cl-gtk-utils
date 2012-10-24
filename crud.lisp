@@ -51,6 +51,55 @@ thorough clearing."
       #1#)
     box))
 
+
+(ew
+(defun crud-inputs (name columns)
+  (let (input-vars)
+    (with-gensyms!
+      `(let-ui (h-box
+                :var ,g!box
+                ,@(mapcan
+                   (with-column+ ()
+                     (multiple-value-bind (entries vars)
+                         (generate-ui-input-fields type)
+                       (push vars input-vars)
+                       `((label :label ,label)
+                         ,@entries)))
+                   columns))
+         ;; read/write/clear
+         (flet ((,g!read-ui ()
+                  (make-instance
+                   ',name
+                   ,@(mapcan
+                      (with-column+ (vars)
+                        `(,(keyw accessor)
+                           (read-ui-input ',type ,@vars)))
+                      columns (setf input-vars (reverse input-vars)))))
+                (,g!write-ui (,g!object)
+                  ,@(mapcar
+                     (with-column+ (vars)
+                       `(write-ui-input ',type (,accessor ,g!object) ,@vars))
+                     columns input-vars))
+                (,g!clear-ui (&optional ,g!thorough)
+                  ,@(mapcar
+                     (with-column+ (vars)
+                       (let ((cmd `(clear-ui-input ',type ,@vars)))
+                         (if clear
+                             cmd
+                             `(when ,g!thorough
+                                ,clear))))
+                     columns input-vars)))
+           (list ,g!box
+                 :read-ui  ,g!read-ui
+                 :write-ui ,g!write-ui
+                 :clear-ui ,g!clear-ui)))))))
+
+(defgeneric generate-ui-input-fields (type))
+
+(defgeneric read-ui-input  (type &rest vars))
+(defgeneric write-ui-input (type data &rest vars))
+(defgeneric clear-ui-input (type &rest vars))
+
 ;;; TODO the ultimate macro to build a crud ui automatically from an
 ;;; enhanced defclass
 (defun unbox (x)

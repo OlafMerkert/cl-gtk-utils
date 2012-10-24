@@ -31,4 +31,5 @@
    :setup-combo-box
    :crud-buttons
    :copy-contents
-   :defclass/crud))
+   :defclass/crud
+   :crud-inputs))
