@@ -10,7 +10,6 @@ parameters, returning something to put in the STORE, WRITE-UI should
 accept one parameter, taken straight from the store, and CLEAR-UI
 should take one optional parameter, which if provided suggests a more
 thorough clearing."
-  ;; TODO default read/write/clear ui functions??
   (let-ui (h-box
            :var box                     ; Aktionen
            (button :label "Neu"          :var create-button) :expand nil
@@ -54,6 +53,11 @@ thorough clearing."
 
 (ew
 (defun crud-inputs (name columns box-var body)
+  "Generate code to fill an `h-box' bound to BOX-VAR with input
+controls matching the types of columns. The first input control is
+bound to DEFAULT-FOCUS-WIDGET in body, further we generate READ-UI,
+WRITE-UI, CLEAR-UI functions to be passed to CRUD-BUTTONS, which
+generate instances of class NAME."
   (let (input-vars)
     (with-gensyms!
       `(let-ui (h-box
@@ -89,7 +93,8 @@ thorough clearing."
                              `(when ,g!thorough
                                 ,cmd))))
                      columns input-vars)))
-           ,@body))))))
+           (let ((default-focus-widget ,(unbox input-vars)))
+             ,@body)))))))
 
 (defgeneric generate-ui-input-fields (type))
 
@@ -103,6 +108,19 @@ thorough clearing."
         (collect (symb prefix i))))
 
 (defmacro! define-ui-input (type &body components)
+  "Define an UI input element to be used by CRUD-INPUTS for the given
+TYPE. A COMPONENT has as first element the argument list to
+MAKE-INSTANCE to create the gtk widget, the rest ought to be a plist
+with keys :ACCESSOR, giving a form to extract the data from a given
+object bound to the TYPE, and :default-value, the default data to be
+put into the widget.
+
+Two special components, with the first element being either :WRITE
+or :READ, ought to give the code that either sets or gets the contents
+of the normal components, which are locally bound to C-1, ..., C-N.
+Extracted data or default-values for the components are bound to V-1,
+..., V-N in the :WRITE part. The :READ part should return an object
+matching the understanding of TYPE."
   (let ((comp-specs (remove-if-not #'listp components :key #'first))
         (read-spec  (assoc1 :read components))
         (write-spec (assoc1 :write components))
@@ -181,8 +199,9 @@ thorough clearing."
   buttons)
 
 (defmacro! define-custom-crud (name columns)
-  ;; a crud consists of a backing store, a box containing the input
-  ;; ui, a box containing the actions ui and a tree-view linked to the store
+  "Define a setup method MAKE-CRUD for the elements of a CRUD (the
+structure) with a backing store, a `tree-view', an input widget and a
+buttons widget all glued together."
   `(defmethod make-crud ((crud-ident (eql ',name)) ,g!contents)
      (let ((,g!store (make-store ',(symb name '-tabelle) ,g!contents))
            (,g!view  (make-instance 'tree-view)))
@@ -196,9 +215,13 @@ thorough clearing."
                        (crud-buttons ,g!store ,g!view
                           :read-ui  #'read-ui
                           :write-ui #'write-ui
-                          :clear-ui #'clear-ui)))))))
+                          :clear-ui #'clear-ui
+                          :default-focus default-focus-widget)))))))
 
 (defun crud-default-attach (crud v-box)
+  "Given a CRUD structure, first attach the inputs, then the buttons
+and finally the `tree-view' in a `scrolled-window' to the V-BOX.
+Return the backing store of the CRUD."
   (let ((scwin (make-instance 'scrolled-window
                               :hscrollbar-policy nil
                               :vscrollbar-policy :automatic)))
@@ -209,7 +232,7 @@ thorough clearing."
   (crud%-store crud))
 
 
-;;; TODO the ultimate macro to build a crud ui automatically from an
+;;; the ultimate macro to build a crud ui automatically from an
 ;;; enhanced defclass
 (defun unbox (x)
   (if (atom x) x (car x)))
