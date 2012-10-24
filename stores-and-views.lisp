@@ -54,10 +54,16 @@
 ;; helper macro for working with the column specs
 (defmacro with-column ((column) &body body)
   `(destructuring-bind
-         (accessor &key (type 'string) (label "???"))
+         (accessor &key (type 'string) (label "???") (clear nil))
        (mklist ,column)
-     (declare (ignorable accessor type label))
+     (declare (ignorable accessor type label clear))
      ,@body))
+
+(defmacro! with-column+ (additional-args &body body)
+  `(lambda (,g!col ,@additional-args)
+     (with-column (,g!col)
+       ,@body)))
+
 
 (defgeneric make-store (store-ident &optional contents))
 
@@ -73,14 +79,13 @@
        (let ((,g!store (make-instance 'array-list-store)))
          ;; create definitions of the columns
          ,@(mapcar
-            (lambda (col)
-              (with-column (col)
-                `(store-add-column
-                  ,g!store
-                  ,(cond ((stringp type) type)
-                         ((assoc1 type gtk-type-mapping))
-                         (t (error "Uncompatible lisp type ~A for GTK store." type)))
-                  (transform-reader ',type (function ,accessor)))))
+            (with-column+ ()
+              `(store-add-column
+                ,g!store
+                ,(cond ((stringp type) type)
+                       ((assoc1 type gtk-type-mapping))
+                       (t (error "Uncompatible lisp type ~A for GTK store." type)))
+                (transform-reader ',type (function ,accessor))))
             columns)
          ;; setup the contents of the array-list store
          (store-load-items ,g!store (or ,g!contents ,initial-contents))
