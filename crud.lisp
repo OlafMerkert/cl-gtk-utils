@@ -63,8 +63,8 @@ thorough clearing."
                      (multiple-value-bind (entries vars)
                          (generate-ui-input-fields type)
                        (push vars input-vars)
-                       `((label :label ,label)
-                         ,@entries)))
+                       `((label :label ,label) :expand nil
+                         ,@(mapcan (lambda (x) `(,x :expand ,expand)) entries))))
                    columns))
          ;; read/write/clear
          (flet ((,g!read-ui ()

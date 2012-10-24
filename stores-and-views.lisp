@@ -54,9 +54,10 @@
 ;; helper macro for working with the column specs
 (defmacro with-column ((column) &body body)
   `(destructuring-bind
-         (accessor &key (type 'string) (label "???") (clear nil))
+         (accessor &key (type 'string) (label "???")
+                   (clear nil) (expand nil))
        (mklist ,column)
-     (declare (ignorable accessor type label clear))
+     (declare (ignorable accessor type label clear expand))
      ,@body))
 
 (defmacro! with-column+ (additional-args &body body)
