@@ -100,6 +100,66 @@ thorough clearing."
 (defgeneric write-ui-input (type data &rest vars))
 (defgeneric clear-ui-input (type &rest vars))
 
+(defun numbered-symbols (prefix list)
+  (iter (for i from 1)
+        (for l in list)
+        (collect (symb prefix i))))
+
+
+(defmacro! define-ui-input (type &body components)
+  (let ((comp-specs (remove-if-not #'listp components :key #'first))
+        (read-spec  (assoc1 :read components))
+        (write-spec (assoc1 :write components))
+        (type-spec  `(type (eql ',type))))
+    (let ((comp-symbols  (numbered-symbols 'c- comp-specs))
+          (value-symbols (numbered-symbols 'v- comp-specs))
+          (comp-gensyms  (list->gensyms comp-specs)))
+      `(progn
+         (defmethod generate-ui-input-fields (,type-spec)
+           (values ',(mapcar (lambda (comp-spec gensym)
+                                (append (first comp-spec) `(:var ,gensym)))
+                             comp-specs comp-gensyms)
+                   ',comp-gensyms))
+         (defmethod read-ui-input (,type-spec &rest ,g!vars)
+           (destructuring-bind ,comp-symbols ,g!vars
+             ,@read-spec))
+         (defmethod write-ui-input (,type-spec ,type &rest ,g!vars)
+           (destructuring-bind ,comp-symbols ,g!vars
+             (let ,(mapcar #2`(,a1 ,(getf (rest a2) :accessor type))
+                           value-symbols
+                           comp-specs)
+               ,@write-spec)))
+         (defmethod clear-ui-input (,type-spec &rest ,g!vars)
+           (destructuring-bind ,comp-symbols ,g!vars
+             (let ,(mapcar #2`(,a1 ,(getf (rest a2) :default ""))
+                           value-symbols
+                           comp-specs)
+               ,@write-spec)))))))
+
+(define-ui-input string
+  ((entry)
+   :default-value "")
+  (:write (setf (entry-text c-1) v-1))
+  (:read (entry-text c-1)))
+
+(define-ui-input date
+  ((entry :width-chars 2)
+   :accessor (princ-to-string (local-time:timestamp-day date))
+   :default-value "")
+  ((entry :width-chars 2)
+   :accessor (princ-to-string (local-time:timestamp-month date))
+   :default-value "")
+  ((entry :width-chars 4)
+   :accessor (princ-to-string (local-time:timestamp-year date))
+   :default-value "")
+  (:write (setf (entry-text c-1) v-1
+                (entry-text c-2) v-2
+                (entry-text c-3) v-3))
+  (:read  (ol-date-utils:encode-date
+           (parse-integer (entry-text c-1))
+           (parse-integer (entry-text c-2))
+           (parse-integer (entry-text c-3)))))
+
 ;;; TODO the ultimate macro to build a crud ui automatically from an
 ;;; enhanced defclass
 (defun unbox (x)
