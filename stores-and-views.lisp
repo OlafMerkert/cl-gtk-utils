@@ -181,7 +181,7 @@ list-store."
   (add-cell-layout-column combo-box column))
 
 (defmethod setup-combo-box ((store symbol) combo-box &optional (column 0))
-  (setup-combo-box (make-store 'symbol) combo-box column))
+  (setup-combo-box (make-store store) combo-box column))
 
 (defmethod setup-combo-box ((store-contents sequence) combo-box &optional column)
   (declare (ignore column))
