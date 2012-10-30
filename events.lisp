@@ -29,6 +29,6 @@
 
 (defun group-radio-buttons (&rest radio-buttons)
   (mapc (lambda (first second)
-          (setf (radio-button-group first)
-                (radio-button-group second)))
+          (setf (radio-button-group second)
+                (radio-button-group first)))
         radio-buttons (rest radio-buttons)))
