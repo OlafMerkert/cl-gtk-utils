@@ -36,3 +36,9 @@
    :make-crud
    :crud-default-attach
    :define-custom-crud))
+
+(defpackage :gtk-user
+  (:shadowing-import-from :gtk :range)
+  (:use :cl :ol
+        :iterate
+        :gtk :gdk :gobject))
